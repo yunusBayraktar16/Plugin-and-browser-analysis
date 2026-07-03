@@ -1,0 +1,243 @@
+\documentclass[12pt,a4paper]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[turkish]{babel}
+\usepackage[top=2.5cm, bottom=2.5cm, left=3cm, right=3cm]{geometry}
+\usepackage{listings}
+\usepackage{xcolor}
+\usepackage{graphicx}
+\usepackage{hyperref}
+
+\lstset{
+    basicstyle=\ttfamily\footnotesize,
+    breaklines=true,
+    backgroundcolor=\color{gray!10},
+    frame=single,
+    keywordstyle=\color{blue},
+    commentstyle=\color{green!60!black},
+    stringstyle=\color{orange}
+}
+
+\begin{document}
+
+% ---------------- SAYFA 1: KAPAK VE PROJE TANITIMI ----------------
+\begin{titlepage}
+    \begin{center}
+        \vspace*{1cm}
+        \textbf{\large T.C.}\\[0.2cm]
+        \textbf{\large BİLECİK ŞEYH EDEBALİ ÜNİVERSİTESİ}\\[0.2cm]
+        \textbf{\large MÜHENDİSLİK FAKÜLTESİ}\\[0.2cm]
+        \textbf{\large BİLGİSAYAR MÜHENDİSLİĞİ BÖLÜMÜ}\\[3cm]
+        
+        \textbf{\Large Python ile Tarayıcı ve Uzantı Analizi}\\[1.5cm]
+        
+        \includegraphics[width=6cm]{logo.png}\\[2cm]
+        
+        \textbf{\large Yunus Bayraktar}\\[0.2cm]
+        \textbf{\large 327 671 808 24}\\[3cm]
+        
+        \textbf{\large BM414 Ağ Güvenliği}\\[2cm]
+        
+        \textbf{\large BİLECİK 2026}
+        
+    \end{center}
+\end{titlepage}
+\clearpage
+
+% ---------------- SAYFA 2: ÖZET ----------------
+\vspace*{\fill}
+\begin{abstract}
+Günümüzde siber güvenlik tehditlerinin büyük bir kısmı, son kullanıcıların internete açılan kapısı olan web tarayıcıları üzerinden gerçekleşmektedir. Bu proje kapsamında, adli bilişim (forensics) ve tehdit avcılığı (threat hunting) disiplinleri temel alınarak, Mozilla Firefox tarayıcısı üzerinde çalışan bir analiz paneli geliştirilmiştir. Çalışma, tarayıcı geçmişinin, eklenti konfigürasyonlarının ve yerel olarak depolanan şifre veritabanlarının hem statik hem de simüle edilmiş dinamik analiz yöntemleriyle incelenmesini içermektedir. Geliştirilen Streamlit tabanlı mimari sayesinde, şifresiz HTTP trafiği riskleri, eklentilerin tedarik zinciri zafiyetleri ve zayıf parolaların tespiti gibi kritik siber güvenlik bulguları görselleştirilerek raporlanmaktadır. Proje, uç nokta güvenliği (endpoint security) bağlamında tarayıcıların zayıf noktalarını ortaya koymayı ve kurumsal düzeyde alınması gereken sıkılaştırma (hardening) önlemlerine dikkat çekmeyi hedeflemektedir.
+\end{abstract}
+\vspace*{\fill}
+\clearpage
+
+% ---------------- SAYFA 3: SİSTEM MİMARİSİ VE GENEL ÇALIŞMA MANTIĞI ----------------
+\section{Sistem Mimarisi ve Genel Çalışma Mantığı}
+
+Geliştirilen Tarayıcı ve Eklenti Analizi Projesi (Browser Forensics \& Threat Hunting Panel), Python tabanlı modern bir web framework'ü olan Streamlit kullanılarak inşa edilmiştir. Bu mimari, arka planda çalışan güçlü veri işleme ve analiz algoritmalarının, son kullanıcıya interaktif ve anlık olarak sunulmasını sağlamaktadır. 
+
+Sistemin temel çalışma prensibi, Windows işletim sistemlerinde varsayılan olarak \texttt{AppData\textbackslash Roaming\textbackslash Mozilla\textbackslash Firefox\textbackslash Profiles} dizininde saklanan kullanıcı profil verilerinin toplanması, anlamlandırılması ve güvenlik perspektifiyle değerlendirilmesine dayanmaktadır. Tarayıcı profil dizini, kullanıcının internet üzerindeki tüm ayak izlerini barındıran kritik bir veri havuzudur.
+
+\subsection{Adli Bilişim Araç Simülasyonu Olarak Tasarım}
+Proje, bir siber güvenlik operasyon merkezinde (SOC) çalışan analistlerin veya adli bilişim uzmanlarının kullandığı araçların davranışlarını simüle edecek şekilde tasarlanmıştır. Canlı bir sisteme müdahale ederken veri bütünlüğünün korunması adli bilişimin en temel kuralıdır. Bu nedenle sistem, orijinal dosyalar üzerinde işlem yapmak yerine, ilgili veritabanlarının gölge kopyalarını (shadow copies) oluşturarak analiz sürecini izole bir ortamda gerçekleştirir.
+
+\subsection{Statik ve Dinamik Analiz Yaklaşımları}
+Zararlı yazılım ve tehdit analizinde kullanılan iki temel yaklaşım projeye entegre edilmiştir:
+\begin{itemize}
+    \item \textbf{Statik Analiz:} Kodun veya konfigürasyon dosyalarının çalıştırılmadan incelenmesidir. Projemizde eklentilerin yetki bildirimleri (manifest dosyaları) ve tarayıcının yerel veritabanı şemaları statik olarak analiz edilmektedir.
+    \item \textbf{Dinamik Analiz:} Kodun izole bir ortamda (sandbox) çalıştırılarak davranışlarının gözlemlenmesidir. Proje kapsamında, eklentilerin çalışma zamanı (runtime) aktiviteleri bir simülasyon motoru aracılığıyla modellenmiş ve olası anomali durumları tespit edilebilir hale getirilmiştir.
+\end{itemize}
+
+Bu hibrit yaklaşım, hem bilinen zafiyetlerin konfigürasyon üzerinden tespiti hem de bilinmeyen tehditlerin davranışsal olarak yakalanması için kapsamlı bir vizyon sunmaktadır.
+\clearpage
+
+% ---------------- SAYFA 4: MODÜL 1 - CANLI LOG VE TRAFİK GÜVENLİĞİ ANALİZİ ----------------
+\section{Modül 1 - Canlı Log ve Trafik Güvenliği Analizi}
+
+Tarayıcı geçmişi ve ağ trafiği kayıtları, kullanıcının internet alışkanlıklarını ve potansiyel olarak maruz kaldığı tehditleri yansıtan en önemli bilgi kaynaklarıdır. Firefox, bu verileri \texttt{places.sqlite} adlı SQLite veritabanı dosyasında yapılandırılmış bir şekilde saklamaktadır.
+
+\subsection{Veritabanı Yapısı ve Gölge Kopya Mimarisi}
+\texttt{places.sqlite} veritabanı, ziyaret edilen URL'ler, ziyaret zamanları (PRTime formatında) ve yönlendirme zincirleri gibi kritik metadataları barındırır. Firefox çalışır durumdayken bu dosya genellikle işletim sistemi tarafından kilitlenir (file lock). Analiz aracımızın canlı bir sistemde çökme veya veri bozulmasına (corruption) yol açmadan çalışabilmesi için, Python'un \texttt{shutil.copyfile} kütüphanesi kullanılarak dosyanın geçici (temp) bir dizine gölge kopyası alınır. Okuma ve sorgulama işlemleri tamamen bu kopya üzerinden gerçekleştirilerek adli bilişim standartlarındaki "orijinal kanıta dokunmama" ilkesi yerine getirilmiş olur.
+
+\subsection{Şifresiz HTTP Trafiği ve MITM Riskleri}
+Analiz motorumuz, tarayıcı geçmişini tarayarak özellikle "http://" protokolü ile başlayan bağlantıları tespit etmek üzere tasarlanmıştır. Günümüz web standartlarında HTTPS kullanımının zorunluluğu göz önüne alındığında, şifresiz HTTP bağlantıları ciddi bir güvenlik zafiyeti teşkil etmektedir.
+
+Şifresiz trafik, Ortadaki Adam (Man-in-the-Middle - MITM) saldırılarına doğrudan kapı aralar. Aynı ağda bulunan bir saldırgan (örneğin ARP Zehirlenmesi yöntemiyle), sunucu ile istemci arasındaki paketleri yakalayabilir (sniffing) ve okuyabilir. Kimlik bilgileri, oturum çerezleri (session cookies) ve hassas kullanıcı verileri clear-text (düz metin) olarak iletildiği için kolaylıkla ele geçirilebilir. Modül 1, bu riskli bağlantıları izole ederek analiste anlık bir güvenlik skoru ve uyarı raporu sunar.
+\clearpage
+
+% ---------------- SAYFA 5: MODÜL 2 (KISIM A) - EKLENTİ TEDARİK ZİNCİRİ RISK ANALİZİ (STATİK) ----------------
+\section{Modül 2 (Kısım A) - Eklenti Tedarik Zinciri Risk Analizi (Statik Analiz)}
+
+Web tarayıcı eklentileri (extensions), tarayıcının yeteneklerini artıran ancak aynı zamanda tarayıcının çalıştığı bağlamda (context) geniş haklara sahip olan üçüncü parti yazılımlardır. Firefox profil dizinindeki \texttt{extensions.json} dosyası, kurulan tüm eklentilerin metadata bilgilerini, güncellenme durumlarını ve en önemlisi talep ettikleri izinleri (permissions) içerir.
+
+\subsection{Geniş Yetki Tanımları ve Riskleri}
+Statik analiz motorumuz, eklentilerin sahip olduğu izinleri ayrıştırarak bir risk skorlaması yapar. Özellikle aşağıdaki izinler yüksek riskli olarak işaretlenmektedir:
+\begin{itemize}
+    \item \texttt{<all\_urls>}: Eklentinin kullanıcının ziyaret ettiği tüm web sayfalarının içeriğine erişebilmesi ve DOM (Document Object Model) yapısını değiştirebilmesi anlamına gelir.
+    \item \texttt{webRequest} ve \texttt{webRequestBlocking}: Ağ isteklerini yakalama, okuma ve hatta modifiye etme yetkisidir.
+    \item \texttt{cookies}: Oturum token'larına ve çerezlere doğrudan erişim sağlar.
+\end{itemize}
+
+\subsection{Tedarik Zinciri Saldırıları (Supply Chain Attacks)}
+Görünürde zararsız ve popüler olan bir eklenti, geliştiricisinin hesabı ele geçirildiğinde veya eklenti başka bir şirkete satıldığında bir anda zararlı bir yazılıma dönüşebilir. Kötü niyetli aktörler, eklentiye zararlı bir güncelleme göndererek milyonlarca kullanıcının tarayıcısına sızabilirler. Statik analiz modülümüz, bu tür tedarik zinciri saldırılarına karşı erken uyarı sistemi görevi görerek, gereğinden fazla yetki talep eden eklentileri "Kırmızı Alarmlı" olarak sınıflandırır ve veri sızdırma (data exfiltration) potansiyellerini raporlar.
+\clearpage
+
+% ---------------- SAYFA 6: MODÜL 2 (KISIM B) - DİNAMİK RUNTIME İZLEME SİMÜLASYONU ----------------
+\section{Modül 2 (Kısım B) - Dinamik Runtime İzleme Simülasyonu}
+
+Statik analiz, bir eklentinin potansiyel yeteneklerini ortaya koysa da, bu yeteneklerin kötüye kullanılıp kullanılmadığını kesin olarak kanıtlayamaz. Modern zararlı eklentiler (malicious add-ons), statik kod analizini atlatmak için asıl zararlı yüklerini (payload) çalışma zamanında (runtime) uzak sunuculardan indirirler (staged execution) veya davranışlarını gizlerler (obfuscation).
+
+\subsection{Runtime Davranış Modeli Simülasyonu}
+Geliştirdiğimiz panelde, eklentilerin dinamik davranışlarını izleyen sanal bir analiz motoru simülasyonu bulunmaktadır. Bu motor, eklentilerin DOM üzerinde gerçekleştirdiği eylemleri ve dış ağ bağlantılarını temsili olarak değerlendirir. Aşağıdaki davranış kalıpları (heuristics) tehdit olarak algılanır:
+\begin{itemize}
+    \item \textbf{DOM Enjeksiyonu:} Web sayfasına harici JavaScript dosyalarının (örneğin \texttt{script src="http://malicious.com/hook.js"}) enjekte edilmesi.
+    \item \textbf{Keylogging ve Form Grabber Aktivitesi:} Kullanıcının klavye vuruşlarının (\texttt{keyup}, \texttt{keydown} event listener'ları) izlenmesi veya şifre giriş formlarının "submit" anında kopyalanması.
+    \item \textbf{Gizli Veri Sızdırma:} Arka planda XMLHTTPRequest veya Fetch API kullanılarak, toplanan çerez veya form verilerinin yetkisiz bir Command and Control (C2) sunucusuna gönderilmesi.
+\end{itemize}
+
+\subsection{SIEM/SOC Entegrasyon Perspektifi}
+Simülasyon sonuçları, bir SIEM (Security Information and Event Management) veya SOC (Security Operations Center) dashboard'unu andıran bir arayüzle kullanıcıya sunulur. Bu sayede, tehdit avcılığı konsepti pratik bir şekilde görselleştirilerek, şüpheli aktivitelerin nasıl loglandığı ve alarmların (alerts) nasıl tetiklendiği gösterilmektedir.
+\clearpage
+
+% ---------------- SAYFA 7: MODÜL 3 (KISIM A) - KAYITLI PAROLA DEŞİFRE SÜREÇLERİ ----------------
+\section{Modül 3 (Kısım A) - Kayıtlı Parola Deşifre Süreçleri}
+
+Kullanıcı kolaylığı sağlamak amacıyla modern tarayıcılar, girilen kimlik bilgilerini yerel olarak depolama yeteneğine sahiptir. Firefox mimarisinde bu hassas veriler \texttt{logins.json} ve kriptografik anahtarların bulunduğu \texttt{key4.db} veritabanı kullanılarak saklanmaktadır.
+
+\subsection{Yerel Veritabanı Yapısı ve Kriptografik Temeller}
+\texttt{logins.json} dosyası, hedeflenen URL'leri, şifrelenmiş kullanıcı adlarını ve şifrelenmiş parolaları barındırır. Bu verilerin çözülebilmesi için \texttt{key4.db} dosyasında yer alan anahtarlama materyallerine ihtiyaç vardır. Firefox, verileri korumak için 3DES (Triple-DES) veya daha güncel versiyonlarda AES şifreleme algoritmalarını kullanır. NSS (Network Security Services) kütüphaneleri kullanılarak oluşturulan bu yapı, dışarıdan müdahalelere karşı temel bir koruma katmanı sağlar.
+
+\subsection{Ana Parola (Master Password) Zafiyeti ve Yerel Haklar}
+Siber güvenlik perspektifinden bakıldığında en büyük zafiyet, kullanıcının bir "Ana Parola" (Primary Password / Master Password) belirlememiş olmasıdır. Eğer Ana Parola aktif değilse, şifreleme ve deşifreleme işlemleri için gereken simetrik anahtar, işletim sistemindeki kullanıcının mevcut oturum haklarıyla doğrudan erişilebilir durumdadır. 
+
+Bu senaryoda, makineye yerel erişim sağlayan bir saldırgan veya sistemde çalışan zararlı bir yazılım (örneğin bir Infostealer), hiçbir ek yetki yükseltmesine (privilege escalation) ihtiyaç duymadan, kullanıcının tarayıcıda kayıtlı tüm şifrelerini geriye doğru çözebilir. Modülümüz, bu zafiyetin teorik sınırlarını pratiğe dökerek, yerel yetkilerle şifrelerin nasıl kolayca clear-text haline getirilebildiğini gözler önüne sermektedir.
+\clearpage
+
+% ---------------- SAYFA 8: MODÜL 3 (KISIM B) - ADLİ BİLİŞİM MOTORU VE GÜÇ/ENTROPİ TESTİ ----------------
+\section{Modül 3 (Kısım B) - Adli Bilişim Motoru ve Güç/Entropi Testi}
+
+Şifre deşifre süreçlerinin otomatikleştirilmesi ve teknik analizinin yapılabilmesi için projeye \texttt{firepwd.py} adlı adli bilişim motoru entegre edilmiştir.
+
+\subsection{Subprocess Entegrasyonu ve Veri Ayıklama}
+Arayüzden tetiklenen \texttt{firepwd.py} motoru, Python'un \texttt{subprocess} modülü aracılığıyla arka planda çalıştırılır. Motor, \texttt{key4.db} ve \texttt{logins.json} dosyalarını analiz ederek ASN.1 (Abstract Syntax Notation One) formatında kodlanmış ve şifrelenmiş yapıları çözer. Konsol ortamına dönen karmaşık string çıktıları, sistemimiz tarafından Regex (Düzenli İfadeler) algoritmalarıyla parse edilir. Elde edilen ham (raw) veriler temizlenerek URL, Kullanıcı Adı ve Parola üçlüleri halinde yapılandırılmış bir veri setine dönüştürülür.
+
+\subsection{Parola Entropisi ve Dayanıklılık Algoritması}
+Elde edilen parolalar sadece listelenmekle kalmaz, aynı zamanda gelişmiş bir analiz algoritmasından geçirilir. Parolanın gücü, bilgi teorisindeki \textbf{Entropi} (Shannon Entropy) kavramı kullanılarak ölçülür. Entropi hesaplaması şu formüle dayanır:
+\[ E = L \times \log_2(R) \]
+Burada $L$ parolanın uzunluğunu, $R$ ise kullanılan karakter havuzunun (küçük harf, büyük harf, rakam, özel karakter) büyüklüğünü temsil eder.
+
+Geliştirilen algoritma, elde edilen entropi değerine göre parolanın Brute-Force (Kaba Kuvvet) ve Sözlük (Dictionary) saldırılarına karşı ne kadar dayanabileceğini tahmin eder. Zayıf entropiye sahip parolalar anında tespit edilerek sistem tarafından risk unsuru olarak işaretlenir ve kullanıcıya güçlü parola oluşturma standartları hakkında dönüt verilir.
+\clearpage
+
+
+
+% ---------------- SAYFA 10: GÖRSEL 2 ----------------
+\begin{figure}[htpb]
+    \begin{center}
+        \includegraphics[width=10cm,height=7cm,keepaspectratio]{ag2.png}
+    \end{center}
+    \vspace{0.5cm}
+    \caption{Ağ Güvenliği Analiz Paneli - Eklenti Tedarik Zinciri Analizi}
+    
+    \vspace{0.5cm}
+    \begin{quote}
+        \small
+        Bu görsel, tarayıcıya kurulu eklentilerin statik analizini yaparak, gereğinden fazla izin isteyen yüksek riskli eklentileri ve tedarik zinciri zafiyetlerini tespit eden arayüzü göstermektedir.
+    \end{quote}
+\end{figure}
+\clearpage
+
+% ---------------- SAYFA 11: GÖRSEL 3 ----------------
+\begin{figure}[htpb]
+    \begin{center}
+        \includegraphics[width=10cm,height=7cm,keepaspectratio]{ag3.png}
+    \end{center}
+    \vspace{0.5cm}
+    \caption{Ağ Güvenliği Analiz Paneli - Dinamik Runtime İzleme Simülasyonu}
+    
+    \vspace{0.5cm}
+    \begin{quote}
+        \small
+        Bu ekran, şüpheli eklentilerin çalışma zamanı (runtime) davranışlarını aktif olarak izleyen ve potansiyel DOM enjeksiyonu gibi zararlı aktiviteleri anlık olarak tespit eden dinamik simülasyon sonuçlarını içermektedir.
+    \end{quote}
+\end{figure}
+\clearpage
+
+% ---------------- SAYFA 12: GÖRSEL 4 ----------------
+\begin{figure}[htpb]
+    \begin{center}
+        \includegraphics[width=10cm,height=7cm,keepaspectratio]{ag4.png}
+    \end{center}
+    \vspace{0.5cm}
+    \caption{Ağ Güvenliği Analiz Paneli - Canlı Log ve Ağ Trafiği İzleme}
+    
+    \vspace{0.5cm}
+    \begin{quote}
+        \small
+        Görselde, tarayıcının veritabanından çekilen canlı ziyaret geçmişi listelenmekte; özellikle şifresiz HTTP bağlantıları üzerinden yapılabilecek Ortadaki Adam (MITM) saldırı risklerine dikkat çekilmektedir.
+    \end{quote}
+\end{figure}
+\clearpage
+
+% ---------------- SAYFA 13: GÖRSEL 5 ----------------
+\begin{figure}[htpb]
+    \begin{center}
+        \includegraphics[width=10cm,height=7cm,keepaspectratio]{ag5.png}
+    \end{center}
+    \vspace{0.5cm}
+    \caption{Ağ Güvenliği Analiz Paneli - Kayıtlı Parolaların Deşifresi ve Entropi Testi}
+    
+    \vspace{0.5cm}
+    \begin{quote}
+        \small
+        Bu bölümde, tarayıcıdan deşifre edilen (clear-text) şifreler listelenmekte ve zayıf parolaları belirlemek amacıyla kaba kuvvet (brute-force) saldırılarına karşı entropi (dayanıklılık) testi sonuçları sunulmaktadır.
+    \end{quote}
+\end{figure}
+\clearpage
+
+
+% ---------------- SAYFA 10: SONUÇ, DEĞERLENDİRME VE KAYNAKÇA ----------------
+\section{Sonuç ve Değerlendirme}
+
+Geliştirilen bu proje, web tarayıcılarının yalnızca birer internet sörf aracı olmadığını, aynı zamanda kişisel ve kurumsal veri güvenliğinin en kritik sınır noktalarından (endpoint) biri olduğunu açıkça ortaya koymuştur. Adli bilişim yöntemleri ve tehdit avcılığı simülasyonları kullanılarak elde edilen bulgular, eklentilere verilen kontrolsüz yetkilerin, şifresiz ağ bağlantılarının ve korunmayan yerel parola veritabanlarının ne denli büyük siber güvenlik riskleri barındırdığını kanıtlamaktadır.
+
+Oluşturulan interaktif analiz paneli, statik ve dinamik analiz yaklaşımlarını birleştirerek bir SOC analistinin ihtiyaç duyabileceği operasyonel vizyonu sağlamıştır. Tarayıcı seviyesindeki zafiyetlerin tespitinden yola çıkarak hazırlanan sertleştirme (hardening) kılavuzu, reaktif güvenlik anlayışından proaktif (önleyici) güvenlik stratejisine geçişin önemini vurgulamaktadır. Kurumsal ağ güvenliği ve uç nokta güvenliğinin sağlanması adına, tarayıcı yapılandırmalarının düzenli olarak denetlenmesi ve sıkı güvenlik politikalarının tavizsiz uygulanması şarttır.
+
+\vspace{2cm}
+\begin{thebibliography}{9}
+
+\bibitem{cis_bench}
+Center for Internet Security (CIS), \textit{CIS Mozilla Firefox Benchmarks}, 2023. \url{https://www.cisecurity.org/benchmark/mozilla_firefox}
+
+\bibitem{github}
+GitHub, \textit{Ağ Güvenliği ve Açık Kaynak Araçları ve Depoları}, \url{https://github.com}
+
+\bibitem{stackoverflow}
+Stack Overflow, \textit{Siber Güvenlik, Kriptografi ve Python Geliştirici Forumları}, \url{https://stackoverflow.com}
+
+\bibitem{reddit}
+Reddit, \textit{Siber Güvenlik Toplulukları (r/cybersecurity, r/netsec)}, \url{https://www.reddit.com}
+
+\end{thebibliography}
+
+\end{document}
